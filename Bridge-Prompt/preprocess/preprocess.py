@@ -55,7 +55,7 @@ for i in range(len(dss)):
         labels = pd.read_csv(lpath, sep='\s+', header=None)
         label_all = np.zeros(vlen)
         for index, row in labels.iterrows():
-            label_all[row[0]:row[1] + 1] = int(row[2][1:])
+            label_all[row[0] - 1:row[1]] = int(row[2][1:])
         os.makedirs(osp.join(root, 'action_ids'), exist_ok=True)
         label_prefix = '_'.join(dat.split('/'))
         if not osp.exists(osp.join(root, 'action_ids', f'{label_prefix}.npy')):
