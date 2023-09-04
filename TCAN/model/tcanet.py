@@ -3,8 +3,6 @@ import logging
 from torch import nn
 import torch.nn.functional as F
 from model.tcn_block import TemporalConvNet
-import torchvision.models as models
-
 # from model.pe import PositionEmbedding
 # from model.optimizations import VariationalDropout, WeightDropout
 
@@ -26,26 +24,18 @@ class TCANet(nn.Module):
         # self.word_encoder = nn.Embedding(input_output_size, emb_size)
         if signal_type == 'visual':
             emb_size = visual_emsize
-            self.resnet_dict = {"resnet18": models.resnet18(weights=None),
-                    "resnet50": models.resnet50(weights=None)}
-            resnet = self._get_res_basemodel("resnet18")
-            num_ftrs = resnet.fc.in_features
-            self.res_features = nn.Sequential(*list(resnet.children())[:-1])
-            # projection MLP for ResNet Model
-            self.res_l1 = nn.Linear(num_ftrs, visual_emsize)
-            # self.res_l2 = nn.Linear(num_ftrs, visual_emsize)
-            # self.visual_embedding = nn.Sequential(
-            # # First convolutional layer followed by ReLU and max-pooling
-            #     nn.Conv2d(3, 32, kernel_size=3, padding=1),
-            #     nn.ReLU(inplace=True),
-            #     nn.MaxPool2d(kernel_size=2, stride=2),
+            self.visual_embedding = nn.Sequential(
+            # First convolutional layer followed by ReLU and max-pooling
+                nn.Conv2d(3, 32, kernel_size=3, padding=1),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(kernel_size=2, stride=2),
                 
-            #     # Second convolutional layer followed by ReLU and max-pooling
-            #     nn.Conv2d(32, visual_emsize, kernel_size=3, padding=1),
-            #     nn.ReLU(inplace=True),
-            #     nn.AdaptiveAvgPool2d(1)
-            #     # nn.MaxPool2d(kernel_size=2, stride=2)
-            # )
+                # Second convolutional layer followed by ReLU and max-pooling
+                nn.Conv2d(32, visual_emsize, kernel_size=3, padding=1),
+                nn.ReLU(inplace=True),
+                nn.AdaptiveAvgPool2d(1)
+                # nn.MaxPool2d(kernel_size=2, stride=2)
+            )
             # self.fc_visual = nn.Linear(64 * 56 * 56, visual_emsize)
             # self.word_encoder = nn.Embedding(256, emb_size)
         # self.position_encoder = PositionEmbedding(emb_size, seq_len)
@@ -73,24 +63,6 @@ class TCANet(nn.Module):
             conv_names_list.append(['network', level_i, 'net', 0, 'weight_v'])
             conv_names_list.append(['network', level_i, 'net', 4, 'weight_v'])
         return conv_names_list
-    
-    def _get_res_basemodel(self, res_model_name):
-        try:
-            res_model = self.resnet_dict[res_model_name]
-            print("Image feature extractor:", res_model_name)
-            return res_model
-        except:
-            raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
-        
-    def _image_encoder(self, xis):
-        h = self.res_features(xis)
-        h = h.squeeze()
-
-        h = self.res_l1(h)
-        # x = F.relu(x)
-        # x = self.res_l2(x)
-
-        return h
 
     def forward(self, input):
         """Input ought to have dimension (N, C_in, L_in), where L_in is the seq_len; here the input is (N, L, C)"""
@@ -103,9 +75,7 @@ class TCANet(nn.Module):
             num_time_steps = input.size(1)
             input = input.view(batch_size * num_time_steps, input.size(2), input.size(3), input.size(4)) # [N = batch_size * number_time_steps, H, W, C]
             input = input.permute(0, 3, 1, 2)  # [N, C, H, W]
-            # input = self.visual_embedding(input)
-            input = self._image_encoder(input)
-
+            input = self.visual_embedding(input)
             input = input.contiguous().view(input.size(0), -1) # [N, 64 * 60 * 80]
             # input = self.fc_visual(input)  # [N, C = visual_emb]
             input = input.view(batch_size, num_time_steps, -1) # [N = batch_size, L = number_time_steps, C]
@@ -118,8 +88,9 @@ class TCANet(nn.Module):
                 return y.contiguous(), [attn_weight_list[0], attn_weight_list[self.num_levels//2], attn_weight_list[-1]]
             else:
                 y = self.tcanet(input.transpose(1, 2))
+                encoded_input = y.transpose(1, 2)[:, -1]
                 y = self.decoder(y.transpose(1, 2)[:, -1])
-                return y.contiguous()
+                return y.contiguous(), encoded_input.contiguous()
             
             # emb = self.drop(self.word_encoder(input))
             # if self.temp_attn:
@@ -142,8 +113,9 @@ class TCANet(nn.Module):
                 return y.contiguous(), [attn_weight_list[0], attn_weight_list[self.num_levels//2], attn_weight_list[-1]]
             else:
                 y = self.tcanet(input.transpose(1, 2))
+                encoded_input = y.transpose(1, 2)[:, -1]
                 y = self.decoder(y.transpose(1, 2)[:, -1])
-                return y.contiguous()
+                return y.contiguous(), encoded_input.contiguous()
             
         # emb = self.drop(self.word_encoder(input))
         # if self.temp_attn:

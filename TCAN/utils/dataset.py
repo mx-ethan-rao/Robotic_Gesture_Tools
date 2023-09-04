@@ -33,12 +33,12 @@ class KinematicDataset(data.Dataset):
                 experiment_list.append(filename)
 
         # shuffle the experiment_list
-        # random.seed(seed)
-        # random.shuffle(experiment_list)
+        random.seed(seed)
+        random.shuffle(experiment_list)
 
         if train_scheme == 'LOUO':
             LOUO_group = experiment_list[0].split('_')[-1][0]
-            LOUO_group = 'C'
+            # LOUO_group = 'B'
             if task == 'train':
                 experiment_list = [experiment for experiment in experiment_list if experiment.split('_')[-1][0] != LOUO_group]
             else:
@@ -96,7 +96,7 @@ class KinematicDataset(data.Dataset):
         labels = pd.read_csv(osp.join(dir_data_root, dataset_name, 'transcriptions', suffix), sep='\s+', header=None)
         label_all = torch.zeros(data_all.shape[0])
         for index, row in labels.iterrows():
-            label_all[row[0]:row[1] + 1] = int(row[2][1:])
+            label_all[row[0] - 1:row[1]] = int(row[2][1:])
 
         label_all.to(torch.float32)
 
@@ -129,7 +129,7 @@ class KinematicDataset(data.Dataset):
         #     labels = pd.read_csv(osp.join(dir_data_root, dataset_name, 'transcriptions', suffix), sep='\s+', header=None)
         #     label_all = torch.zeros(max(data_left.size(0), data_right.size(0)))
         #     for index, row in labels.iterrows():
-        #         label_all[row[0]:row[1] + 1] = int(row[2][1:])
+        #         label_all[row[0] - 1:row[1]] = int(row[2][1:])
 
         #     label_all.to(torch.float32)
 
@@ -179,45 +179,44 @@ class KinematicDataset(data.Dataset):
 class VisualDataset(data.Dataset):
     def __init__(self, dir_data_root, dataset_name, task, fps, seq_len, valid_len, train_scheme='LOUO', is_permute=False, ratio = [0.7, 0.2, 0.1], seed=1111):
         super(VisualDataset, self).__init__()
-        self.root = osp.join(dir_data_root, dataset_name, f'{train_scheme}_processed_video', task)
-        if not osp.exists(self.root):
-            self.is_permute = is_permute
-            if is_permute:
-                torch.manual_seed(seed)
-                self.permute = torch.Tensor(np.random.permutation(784).astype(np.float64)).long()
-            experiment_list = []
-            for filename in os.listdir(osp.join(dir_data_root, dataset_name, 'transcriptions')):
-                if os.path.isfile(osp.join(dir_data_root, dataset_name, 'transcriptions', filename)):
-                    experiment_list.append(filename)
+        self.is_permute = is_permute
+        if is_permute:
+            torch.manual_seed(seed)
+            self.permute = torch.Tensor(np.random.permutation(784).astype(np.float64)).long()
+        experiment_list = []
+        for filename in os.listdir(osp.join(dir_data_root, dataset_name, 'transcriptions')):
+            if os.path.isfile(osp.join(dir_data_root, dataset_name, 'transcriptions', filename)):
+                experiment_list.append(filename)
 
-            # shuffle the experiment_list
-            # random.seed(seed)
-            # random.shuffle(experiment_list)
+        # shuffle the experiment_list
+        random.seed(seed)
+        random.shuffle(experiment_list)
 
-            if train_scheme == 'LOUO':
-                LOUO_group = experiment_list[0].split('_')[-1][0]
-                LOUO_group = 'C'
-                if task == 'train':
-                    experiment_list = [experiment for experiment in experiment_list if experiment.split('_')[-1][0] != LOUO_group]
-                else:
-                    experiment_list = [experiment for experiment in experiment_list if experiment.split('_')[-1][0] == LOUO_group]
-            elif train_scheme == 'LUSO':
-                LUSO_group = experiment_list[0].split('.')[0][-1]
-                # LUSO_group = '5'
-                if task == 'train':
-                    experiment_list = [experiment for experiment in experiment_list if experiment.split('.')[0][-1] != LUSO_group]
-                else:
-                    experiment_list = [experiment for experiment in experiment_list if experiment.split('.')[0][-1] == LUSO_group]
+        if train_scheme == 'LOUO':
+            LOUO_group = experiment_list[0].split('_')[-1][0]
+            # LOUO_group = 'B'
+            if task == 'train':
+                experiment_list = [experiment for experiment in experiment_list if experiment.split('_')[-1][0] != LOUO_group]
             else:
-                train_idx = int(len(experiment_list) * ratio[0])
-                valid_idx = int(len(experiment_list) * (ratio[0] +  ratio[1]))
-                if task == 'train':
-                    experiment_list = experiment_list[:train_idx]
-                elif task == 'valid':
-                    experiment_list = experiment_list[train_idx: valid_idx]
-                else:
-                    experiment_list = experiment_list[valid_idx:]
-            self._save_data(dir_data_root, dataset_name, task, seq_len, valid_len, experiment_list, fps, train_scheme)
+                experiment_list = [experiment for experiment in experiment_list if experiment.split('_')[-1][0] == LOUO_group]
+        elif train_scheme == 'LUSO':
+            LUSO_group = experiment_list[0].split('.')[0][-1]
+            # LUSO_group = '5'
+            if task == 'train':
+                experiment_list = [experiment for experiment in experiment_list if experiment.split('.')[0][-1] != LUSO_group]
+            else:
+                experiment_list = [experiment for experiment in experiment_list if experiment.split('.')[0][-1] == LUSO_group]
+        else:
+            train_idx = int(len(experiment_list) * ratio[0])
+            valid_idx = int(len(experiment_list) * (ratio[0] +  ratio[1]))
+            if task == 'train':
+                experiment_list = experiment_list[:train_idx]
+            elif task == 'valid':
+                experiment_list = experiment_list[train_idx: valid_idx]
+            else:
+                experiment_list = experiment_list[valid_idx:]
+        self._save_data(dir_data_root, dataset_name, task, seq_len, valid_len, experiment_list, fps, train_scheme)
+        self.root = osp.join(dir_data_root, dataset_name, f'{train_scheme}_processed_video', task)
         self.label_all = torch.load(osp.join(self.root, 'labels.pt'))
         self.label_indices = torch.load(osp.join(self.root, 'label_indices.pt'))
         self.transform =  transforms.Compose([
@@ -272,7 +271,7 @@ class VisualDataset(data.Dataset):
         labels = pd.read_csv(osp.join(dir_data_root, dataset_name, 'transcriptions', suffix), sep='\s+', header=None)
         label_all = torch.zeros(max(data_left.size(0), data_right.size(0)))
         for index, row in labels.iterrows():
-            label_all[row[0]:row[1] + 1] = int(row[2][1:])
+            label_all[row[0] - 1:row[1]] = int(row[2][1:])
 
         label_all.to(torch.float32)
 

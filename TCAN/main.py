@@ -38,7 +38,7 @@ def train(args):
     # load data
     logging.info("start load {} dataset.".format(args.dataset_name))
 
-    assert args.signal_type in ["kinematic", "visual", "both"], "signal_type must be {'kinematic', 'visual', 'both'}"
+    assert args.signal_type in ["kinematic", "visual", "both"], "signal_type must be \{'kinematic', 'visual', 'both'\}"
 
     if args.signal_type == 'kinematic':
         train_dataset = KinematicDataset(args.dir_data_root, args.dataset_name, 'train', args.fps, args.seq_len, args.valid_len, args.train_scheme, args.permute)
@@ -110,13 +110,17 @@ def train(args):
                 else:
                     train_batch = (train_batch[0].cuda(args.gpu_id), train_batch[1].cuda(args.gpu_id))
                     label_batch = label_batch.cuda(args.gpu_id)
-                if args.temp_attn:
-                    output_batch, attn_weight_list = model(train_batch)
-                    if i == 1:
-                        visual_info = [train_batch, label_batch, attn_weight_list]
-                        
+                if args.signal_type != 'both':    
+                    if args.temp_attn:
+                        output_batch, attn_weight_list = model(train_batch)
+                        if i == 1:
+                            visual_info = [train_batch, label_batch, attn_weight_list]
+                            
+                    else:
+                        output_batch, _ = model(train_batch)
                 else:
-                    output_batch = model(train_batch)
+                    output_batch, k_output_batch, v_output_batch = model(train_batch, label_batch, 'train')
+
 
                 # Discard the effective history part
                 eff_history = args.seq_len - args.valid_len
@@ -132,13 +136,16 @@ def train(args):
                 else:
                     pred = output_batch.data.max(1, keepdim=True)[1]
                     correct_total += pred.eq(label_batch.data.view_as(pred)).cpu().sum()
-                loss_i = criterion(output_batch, label_batch)
+                if args.signal_type != 'both':  
+                    loss_i = criterion(output_batch, label_batch)
+                else:
+                    loss_i = criterion(output_batch, label_batch) + 0.5 * criterion(k_output_batch, label_batch) + 0.5 * criterion(v_output_batch, label_batch)
 
                 loss_i.backward()
                 if args.clip > 0:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
                 optimizer.step()
-                if args.signal_type != 'mnist':
+                if args.signal_type != 'both':
                     loss_sum += (train_batch.size(1) - eff_history) * loss_i.item()
                     processed_data_size += train_batch.size(1) - eff_history
                 else:
@@ -262,10 +269,13 @@ def evaluate(model, dataloader, criterion, num_gestures, args):
             else:
                 data_batch = (data_batch[0].cuda(args.gpu_id), data_batch[1].cuda(args.gpu_id))
                 label_batch = label_batch.cuda(args.gpu_id)
-            if args.temp_attn:
-                output_batch, _ = model(data_batch)
+            if args.signal_type != 'both':
+                if args.temp_attn:
+                    output_batch, _ = model(data_batch)
+                else:
+                    output_batch, _ = model(data_batch)
             else:
-                output_batch = model(data_batch)
+                output_batch, k_output_batch, v_output_batch = model(data_batch, label_batch, 'test')
 
             # Discard the effective history, just like in training
             if args.signal_type != 'mnist':
@@ -278,10 +288,12 @@ def evaluate(model, dataloader, criterion, num_gestures, args):
             else:
                 pred = output_batch.data.max(1, keepdim=True)[1]
                 correct_total += pred.eq(label_batch.data.view_as(pred)).cpu().sum()
+            if args.signal_type != 'both':
+                loss = criterion(output_batch, label_batch)
+            else:
+                loss = criterion(output_batch, label_batch) + 0.5 * criterion(k_output_batch, label_batch) + 0.5 * criterion(v_output_batch, label_batch)
 
-            loss = criterion(output_batch, label_batch)
-
-            if args.signal_type != 'mnist':
+            if args.signal_type != 'both':
                 total_loss += (data_batch.size(1) - eff_history) * loss.item()
                 processed_data_size += data_batch.size(1) - eff_history
             else:
@@ -333,11 +345,11 @@ if __name__ == '__main__':
                 # Config(batch_size=32, num_gestures=6, optim='Adam', key_size=300, lr=1e-4, epochs=200, gpu_id=6, num_subblocks=0, levels=4, en_res=False, signal_type='both',
                 # temp_attn=False, seq_len=20, valid_len=20, visual_emsize=128 ,conv=True, fps=10, visual=False, wandb_mode='disabled', log="K_sig_conv-True-temp_atten-true"),
 
-                Config(batch_size=32, num_gestures=6, optim='Adam', key_size=300, lr=1e-4, epochs=200, gpu_id=6, num_subblocks=0, levels=4, en_res=False, signal_type='kinematic',
-                temp_attn=True, seq_len=20, valid_len=20, visual_emsize=128 ,conv=True, fps=10, visual=False, wandb_mode='disabled', log="K_sig_conv-True-temp_atten-true"),
+                Config(batch_size=32, num_gestures=6, optim='Adam', key_size=300, lr=1e-4, epochs=200, gpu_id=7, num_subblocks=0, levels=4, en_res=False, signal_type='kinematic',
+                temp_attn=False, seq_len=20, valid_len=20, visual_emsize=128 ,conv=True, fps=10, visual=False, wandb_mode='disabled', log="K_sig_conv-True-temp_atten-true"),
 
                 # Config(num_gestures=6, optim='Adam', key_size=300, lr=1e-4, epochs=200, gpu_id=6, num_subblocks=0, levels=4, en_res=False, signal_type='kinematic',
-                # temp_attn=True, seq_len=80, valid_len=80, visual_emsize=128 ,conv=True, fps=30, visual=False, wandb_mode='disabled', log="K_sig_conv-True-temp_atten-true"),
+                # temp_attn=True, seq_len=80, valid_len=80, visual_emsize=128 ,conv=True, visual=False, wandb_mode='disabled', log="K_sig_conv-True-temp_atten-true"),
 
                 # Config(num_gestures=10, optim='Adam', key_size=300, lr=1e-4, epochs=200, gpu_id=7, num_subblocks=0, levels=4, en_res=False, signal_type='kinematic',
                 # temp_attn=False, seq_len=80, valid_len=80, conv=True, visual=False, wandb_mode='online', log="K_sig_conv-True-temp_atten-false"),
