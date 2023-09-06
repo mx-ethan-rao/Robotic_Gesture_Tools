@@ -1,4 +1,4 @@
-pretrain: "./exp/clip_ucf/ViT-B/16/JIGSAWS/20230903_050918/last_model.pt"
+pretrain: "./exp/clip_ucf/ViT-B/16/JIGSAWS/20230906_022131/last_model.pt"
 seed: 1024
 data:
     dataset: JIGSAWS

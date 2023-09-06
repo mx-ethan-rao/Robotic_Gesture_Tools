@@ -134,11 +134,3 @@ results/
 logs/
 wandb/
 models/
-exp/
-data/
-
-ConVIRT-pytorch/
-ms-tcn/
-SdConv/
-surgical_gesture_recognition/
-Towards-Unified-Surgical-Skill-Assessment/
