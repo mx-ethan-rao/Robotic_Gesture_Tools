@@ -33,13 +33,14 @@ parser.add_argument('--subdataset', default='Knot_Tying')
 parser.add_argument('--vpath', default='/data/mingxing/JIGSAWS')
 parser.add_argument('--val_mode', default='LOUO')
 parser.add_argument('--output', default='/data/mingxing/MS_TCN_data/JIGSAWS')
+parser.add_argument('--visual_feat', default='visual_features')
 args = parser.parse_args()
 
 root = args.vpath
 output = args.output
 val_mode = args.val_mode
 subdataset = args.subdataset
-visual_feat_path = osp.join(root, 'visual_features')
+visual_feat_path = osp.join(root, args.visual_feat)
 # mapping = osp.join(output, 'mapping.txt')
 
 
@@ -58,6 +59,7 @@ for path in tqdm(data_paths):
     os.makedirs(osp.join(output, 'features'), exist_ok=True)
     fname = path.rsplit('/', 1)[1]
     np.save(osp.join(output, 'features', f'{fname}.npy'), data.T)
+    os.makedirs(osp.join(output, 'groundTruth'), exist_ok=True)
     with open(osp.join(output, 'groundTruth', f'{fname}.txt'), 'w') as f:
         for i in label:
             f.write(mapping[int(i)] + '\n')
