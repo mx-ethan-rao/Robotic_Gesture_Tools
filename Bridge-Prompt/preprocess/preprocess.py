@@ -10,14 +10,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='JIGSAWS')
 parser.add_argument('--vpath', default='/data/mingxing/JIGSAWS')
 parser.add_argument('--num_frames', default=16, type=int)
-parser.add_argument('--n_split', default=1, type=int)
+parser.add_argument('--filter_labels', default=False, type=bool)
+parser.add_argument('--keep_labels', default=16, type=int, help='Number of labels to keep')
 args = parser.parse_args()
 
 overlap = [1, 1, 1]
 dss = [4, 8, 16]
-n_split = args.n_split
 num_frames = args.num_frames
 root = args.vpath
+filter_labels = args.filter_labels
+keep_labels = args.keep_labels
 frames_output = osp.join(root, 'frames')
 
 file_suffix = ['*.mp4', '*.avi', '*.webm']
@@ -56,6 +58,18 @@ for i in range(len(dss)):
         label_all = np.zeros(vlen)
         for index, row in labels.iterrows():
             label_all[row[0] - 1:row[1]] = int(row[2][1:])
+
+        # filter labels            
+        if filter_labels and i == 0:
+            delete_frames_indices = []
+            valid_labels = list(range(keep_labels))
+            for idx, l in enumerate(label_all):
+                if l not in valid_labels:
+                    delete_frames_indices.append(idx)
+            label_all = np.delete(label_all, delete_frames_indices, axis=0)
+            for frame_idx in delete_frames_indices:
+                os.remove(osp.join(vpath, 'img_{:05}.jpg'.format(frame_idx + 1)))
+            
         os.makedirs(osp.join(root, 'action_ids'), exist_ok=True)
         label_prefix = '_'.join(dat.split('/'))
         if not osp.exists(osp.join(root, 'action_ids', f'{label_prefix}.npy')):
