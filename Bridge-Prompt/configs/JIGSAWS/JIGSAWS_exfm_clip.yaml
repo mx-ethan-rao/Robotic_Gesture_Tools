@@ -1,4 +1,4 @@
-pretrain: "'./models/vit-16-32f.pt"
+pretrain: "./models/vit-16-32f.pt"
 seed: 1024
 data:
     dataset: JIGSAWS

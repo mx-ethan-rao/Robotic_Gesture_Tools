@@ -67,6 +67,7 @@ for path in tqdm(data_paths):
 # make splits
 # if val_mode == 'LOUO':
 experiment_list = os.listdir(osp.join(output, 'groundTruth'))
+os.makedirs(osp.join(output, 'splits'), exist_ok=True)
 
 if val_mode == 'LOUO':
     LOUO_groups = ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
