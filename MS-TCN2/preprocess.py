@@ -80,12 +80,12 @@ if val_mode == 'LOUO':
             [f.write(f"{s}\n") for s in train_list]
         with open(osp.join(output, 'splits', f'test.split.{subdataset}.{val_mode}.{g}.bundle'), 'w') as f:
             [f.write(f"{s}\n") for s in test_list]
-elif val_mode == 'LUSO':
+elif val_mode == 'LOSO':
     LUSO_groups = ['1', '2', '3', '4', '5']
     # LUSO_group = experiment_list[0].split('.')[0][-1]
     for g in LUSO_groups:
-        train_list = [experiment for experiment in experiment_list if experiment.rsplit('_', 2)[0][-1] != g and experiment.rsplit('_', 2)[0] == subdataset]
-        test_list = [experiment for experiment in experiment_list if experiment.rsplit('_', 2)[0][-1] == g and experiment.rsplit('_', 2)[0] == subdataset]
+        train_list = [experiment for experiment in experiment_list if experiment.rsplit('_', 2)[1][-1] != g and experiment.rsplit('_', 2)[0] == subdataset]
+        test_list = [experiment for experiment in experiment_list if experiment.rsplit('_', 2)[1][-1] == g and experiment.rsplit('_', 2)[0] == subdataset]
         with open(osp.join(output, 'splits', f'train.split.{subdataset}.{val_mode}.{g}.bundle'), 'w') as f:
             [f.write(f"{s}\n") for s in train_list]
         with open(osp.join(output, 'splits', f'test.split.{subdataset}.{val_mode}.{g}.bundle'), 'w') as f:
@@ -95,7 +95,7 @@ else:
     random.seed(12345)
     random.shuffle(experiment_list)
     ratio = 0.8
-    train_idx = int(len(experiment_list) * ratio[0])
+    train_idx = int(len(experiment_list) * ratio)
     train_list = experiment_list[:train_idx]
     test_list = experiment_list[train_idx:]
     with open(osp.join(output, 'splits', f'train.split.{subdataset}.{val_mode}.bundle'), 'w') as f:
