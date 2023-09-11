@@ -106,7 +106,7 @@ class JIGSAWS_FRAMES(data.Dataset):
                  root='/data/mingxing/JIGSAWS',
                  small_test=False,
                  frame_dir='/data/mingxing/JIGSAWS/frames/',
-                 save_feat_dir='/data/mingxing/JIGSAWS/visual_features',
+                 save_feat_dir='',
                  num_frames=32,
                  transforms=None):
         self.root = root
