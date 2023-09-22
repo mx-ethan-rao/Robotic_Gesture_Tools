@@ -11,6 +11,31 @@ def read_file(path):
         f.close()
     return content
 
+def label_accuracy(ground_truth, predicted, mapping):
+    # Get unique labels from ground truth and predictions
+    unique_labels = set(ground_truth + predicted)
+    
+    accuracy_per_label = {}
+    
+    for label in unique_labels:
+        # True positives
+        tp = sum(1 for gt, pred in zip(ground_truth, predicted) if gt == label and pred == label)
+        
+        # False positives
+        fp = sum(1 for gt, pred in zip(ground_truth, predicted) if gt != label and pred == label)
+        
+        # False negatives
+        fn = sum(1 for gt, pred in zip(ground_truth, predicted) if gt == label and pred != label)
+        
+        # True negatives
+        # tn = sum(1 for gt, pred in zip(ground_truth, predicted) if gt != label and pred != label)
+        
+        # accuracy = (tp + tn) / (tp + fp + fn + tn)
+        accuracy = 2*tp / (2*tp + fp + fn)
+        
+        accuracy_per_label[mapping[label]] = round(accuracy, 4)
+    
+    return accuracy_per_label
 
 def get_labels_start_end_time(frame_wise_labels, bg_class=["background"]):
     labels = []
@@ -91,6 +116,24 @@ def f_score(recognized, ground_truth, overlap, bg_class=["background"]):
 
 
 def main():
+    mapping = {
+        "SIL": "0",
+        "reaching_for_needle_with_right_hand": "1",
+        "positioning_needle": "2",
+        "pushing_needle_through_tissue": "3",
+        "transferring_needle_from_left_to_right": "4",
+        "moving_to_center_with_needle_in_grip": "5",
+        "pulling_suture_with_left_hand": "6",
+        "pulling_suture_with_right_hand": "7",
+        "orienting_needle": "8",
+        "using_right_hand_to_help_tighten_suture": "9",
+        "loosening_more_suture": "10",
+        "dropping_suture_at_end_and_moving_to_end_points": "11",
+        "reaching_for_needle_with_left_hand": "12",
+        "making_C_loop_around_right_hand": "13",
+        "reaching_for_suture_with_right_hand": "14",
+        "pulling_suture_with_both_hands": "15"
+    }
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset', default="gtea")
@@ -110,13 +153,17 @@ def main():
     correct = 0
     total = 0
     edit = 0
+    gt_all =[]
+    recog_all = []
 
     for vid in list_of_videos:
         gt_file = ground_truth_path + vid
         gt_content = read_file(gt_file).split('\n')[0:-1]
+        gt_all.extend(gt_content)
 
         recog_file = recog_path + vid.split('.')[0]
         recog_content = read_file(recog_file).split('\n')[1].split()
+        recog_all.extend(recog_content)
 
         for i in range(len(gt_content)):
             total += 1
@@ -130,7 +177,7 @@ def main():
             tp[s] += tp1
             fp[s] += fp1
             fn[s] += fn1
-
+    print(label_accuracy(gt_all, recog_all, mapping))
     print("Acc: %.4f" % (100*float(correct)/total))
     print('Edit: %.4f' % ((1.0*edit)/len(list_of_videos)))
     acc = (100*float(correct)/total)
