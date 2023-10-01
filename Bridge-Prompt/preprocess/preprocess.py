@@ -38,13 +38,13 @@ video_file_names = [osp.relpath(f, root) for f in video_files]
 label_file_names = [osp.relpath(f, root) for f in label_files]
 
 # extract frames
-for video in video_file_names:
-    if not osp.exists(osp.join(frames_output, video).rsplit('.', 1)[0]):
-        os.makedirs(osp.join(frames_output, video).rsplit('.', 1)[0], exist_ok=True)
-        cmd = "ffmpeg -i " + osp.join(root, video) + " -vsync vfr -r " + fps + " " +\
-              osp.join(frames_output, video).rsplit('.', 1)[0] + "/img_%05d.jpg"
-        print(cmd)
-        os.system(cmd)
+# for video in video_file_names:
+#     if not osp.exists(osp.join(frames_output, video).rsplit('.', 1)[0]):
+#         os.makedirs(osp.join(frames_output, video).rsplit('.', 1)[0], exist_ok=True)
+#         cmd = "ffmpeg -i " + osp.join(root, video) + " -vsync vfr -r " + fps + " " +\
+#               osp.join(frames_output, video).rsplit('.', 1)[0] + "/img_%05d.jpg"
+#         print(cmd)
+#         os.system(cmd)
 
 
 # prepare for training splits
@@ -69,6 +69,7 @@ for i in range(len(dss)):
             label_all = np.delete(label_all, delete_frames_indices, axis=0)
             for frame_idx in delete_frames_indices:
                 os.remove(osp.join(vpath, 'img_{:05}.jpg'.format(frame_idx + 1)))
+            vlen = vlen - len(delete_frames_indices)
             
         os.makedirs(osp.join(root, 'action_ids'), exist_ok=True)
         label_prefix = '_'.join(dat.split('/'))
