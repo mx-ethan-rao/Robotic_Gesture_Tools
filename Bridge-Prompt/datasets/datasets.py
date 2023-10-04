@@ -10,12 +10,12 @@ from PIL import Image
 
 class JIGSAWS(object):
     def __init__(self,
-                 root='/data/mingxing/JIGSAWS',
+                 root='/data/mingxing/Bridge_Prompt_data/JIGSAWS_6_labels',
                  transform=None, mode='val',
                  num_frames=16, ds=1, ol=0.5,
                  small_test=False,
                  frame_dir='/data/mingxing/JIGSAWS/frames/',
-                 label_dir='/data/mingxing/JIGSAWS/action_ids/',
+                 label_dir='/data/mingxing/Bridge_Prompt_data/JIGSAWS_6_labels/action_ids/',
                  class_dir='/data/mingxing/JIGSAWS/bf_mapping.json',
                  pretrain=True, n_split=1):
         self.root = root
@@ -26,7 +26,7 @@ class JIGSAWS(object):
         # self.overlap = ol
         self.small_test = small_test
         self.frame_dir = frame_dir
-        self.label_dir = label_dir
+        self.label_dir = os.path.join(root, 'action_ids')
         self.class_dir = class_dir
         self.pretrain = pretrain
         self.n_split = n_split

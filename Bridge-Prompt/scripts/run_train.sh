@@ -9,6 +9,7 @@ fi
 type=$(python -c "import yaml;print(yaml.load(open('${config}'))['network']['type'])")
 arch=$(python -c "import yaml;print(yaml.load(open('${config}'))['network']['arch'])")
 dataset=$(python -c "import yaml;print(yaml.load(open('${config}'))['data']['dataset'])")
-now=$(date +"%Y%m%d_%H%M%S")
+# now=$(date +"%Y%m%d_%H%M%S")
+now=$2-$3
 mkdir -p exp/${type}/${arch}/${dataset}/${now}
-python -u train.py  --config ${config} --log_time $now 2>&1|tee exp/${type}/${arch}/${dataset}/${now}/$now.log
+python -u train.py  --root $4 --config ${config} --log_time $now 2>&1|tee exp/${type}/${arch}/${dataset}/${now}/$now.log

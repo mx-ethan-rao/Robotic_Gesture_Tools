@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,3,4,6"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
 import torch
 import torch.nn as nn
 from datasets import Breakfast, GTEA, SALADS, JIGSAWS
@@ -54,6 +54,7 @@ def main():
     global global_step
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', '-cfg', default='./configs/JIGSAWS/JIGSAWS_ft.yaml')
+    parser.add_argument('--root', default='/data/mingxing/Bridge_Prompt_data/JIGSAWS')
     parser.add_argument('--log_time', default='')
     args = parser.parse_args()
     with open(args.config, 'r') as f:
@@ -120,7 +121,7 @@ def main():
         train_data = SALADS(transform=transform_train, mode='train', num_frames=config.data.num_frames,
                             n_split=config.data.n_split)
     elif args.dataset == 'JIGSAWS':
-        train_data = JIGSAWS(transform=transform_train, mode='train', num_frames=config.data.num_frames,
+        train_data = JIGSAWS(root=args.root, transform=transform_train, mode='train', num_frames=config.data.num_frames,
                             n_split=config.data.n_split)
 
     train_loader = DataLoader(train_data, batch_size=config.data.batch_size, num_workers=config.data.workers,
@@ -246,7 +247,7 @@ def main():
                 optimizer.step()
                 clip.model.convert_weights(base_model)
 
-        epoch_saving(epoch, base_model, fusion_model, optimizer, "{}/".format(working_dir) + str(epoch) + "_epoch.pt")
+        # epoch_saving(epoch, base_model, fusion_model, optimizer, "{}/".format(working_dir) + str(epoch) + "_epoch.pt")
         epoch_saving(epoch, base_model, fusion_model, optimizer, "{}/last_model.pt".format(working_dir))
 
 

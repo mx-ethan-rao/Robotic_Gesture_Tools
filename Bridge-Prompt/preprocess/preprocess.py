@@ -12,6 +12,9 @@ parser.add_argument('--vpath', default='/data/mingxing/JIGSAWS')
 parser.add_argument('--num_frames', default=16, type=int)
 parser.add_argument('--filter_labels', default=False, type=bool)
 parser.add_argument('--keep_labels', default=16, type=int, help='Number of labels to keep')
+parser.add_argument('--out', default='/data/mingxing/tmp/', help='Output dir')
+parser.add_argument('--user_for_val', default='B', type=str, help='User for Leav-One-User-Out Cross Validation')
+parser.add_argument('--task', default='Knot_Tying', type=str)
 args = parser.parse_args()
 
 overlap = [1, 1, 1]
@@ -21,6 +24,10 @@ root = args.vpath
 filter_labels = args.filter_labels
 keep_labels = args.keep_labels
 frames_output = osp.join(root, 'frames')
+output = args.out
+os.makedirs(output, exist_ok=True)
+user_for_val = args.user_for_val
+task = args.task
 
 file_suffix = ['*.mp4', '*.avi', '*.webm']
 video_files = []
@@ -71,23 +78,27 @@ for i in range(len(dss)):
                 os.remove(osp.join(vpath, 'img_{:05}.jpg'.format(frame_idx + 1)))
             vlen = vlen - len(delete_frames_indices)
             
-        os.makedirs(osp.join(root, 'action_ids'), exist_ok=True)
+        os.makedirs(osp.join(output, 'action_ids'), exist_ok=True)
         label_prefix = '_'.join(dat.split('/'))
-        if not osp.exists(osp.join(root, 'action_ids', f'{label_prefix}.npy')):
-            np.save(osp.join(root, 'action_ids', f'{label_prefix}.npy'), label_all)
+        if not osp.exists(osp.join(output, 'action_ids', f'{label_prefix}.npy')):
+            np.save(osp.join(output, 'action_ids', f'{label_prefix}.npy'), label_all)
 
         start_idxs = np.arange(0, vlen, int(num_frames * overlap[i] * dss[i]))
         for idx in start_idxs:
             new_train_list.append([dat, idx, dss[i]])
 
-os.makedirs(osp.join(root, 'splits'), exist_ok=True)
-np.save(osp.join(root, 'splits', 'train_split.npy'), np.array(new_train_list))
+os.makedirs(osp.join(output, 'splits'), exist_ok=True)
+list_for_val = []
+for idx, fragment in enumerate(new_train_list):
+    if osp.basename(fragment[0]).split('_')[-2][0] == user_for_val and fragment[0].split('/')[0] == task:
+        list_for_val.append(idx)
+np.save(osp.join(output, 'splits', 'train_split.npy'), np.delete(np.array(new_train_list), list_for_val, axis=0))
 
 # make feat extractor splits
 frames_file = []
 for s in video_file_names:
     frames_file.extend(glob.glob(osp.join(frames_output, s.rsplit('.', 1)[0], 'img*.jpg'), recursive=True))
 frames_file = [osp.relpath(f, frames_output) for f in frames_file]
-np.save(osp.join(root, 'splits', f'{args.dataset}_exfm.npy'), np.array(frames_file))
+np.save(osp.join(output, 'splits', f'{args.dataset}_exfm.npy'), np.array(frames_file))
 
 
