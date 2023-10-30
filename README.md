@@ -44,6 +44,7 @@ python ./Bridge-Prompt/preprocess/preprocess.py --vpath JIGSAWS_path --out /path
 
 ```bash
 bash scripts/run_train.sh ./configs/JIGSAWS/JIGSAWS_ft.yaml $task $valid /path/to/$title/$task-$valid 
+
 python extract_frame_features.py --config ./configs/JIGSAWS/JIGSAWS_exfm.yaml --pretrain ./exp/clip_ucf/ViT-B/16/JIGSAWS/$task-$valid/last_model.pt --savedir /path/to/$title/$task-$valid/visual_features
 ```
 ### Training using Gesture Index (indtead of text description)
@@ -56,10 +57,13 @@ Change class_dir in JIGSAWS class in ./Bridge-Prompt/datasets/datasets.py from b
 mkdir -p /path/to/$title/$task-$valid/JIGSAWS
 python ./MS_TCN2/preprocess.py --subdataset $task \
                                 --vpath JIGSAWS_path \
-                                --output /data/mingxing/$title/$task-$valid/JIGSAWS \
+                                --output /path/to/$title/$task-$valid/JIGSAWS \
                                 --visual_feat /path/to/$title/$task-$valid/visual_features
+
 cp ./mapping.txt /path/to/$title/$task-$valid/JIGSAWS/mapping.txt
+
 bash train.sh JIGSAWS .$task.LOUO.$valid /path/to/$title/$task-$valid/
+
 bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 ```
 
