@@ -69,7 +69,7 @@ bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 
 Please refer to ./Bridge-Prompt/run_batch_cross_valid.sh for batch running
 
-All the experiments checkpoints are [here](...)
+All the experimental checkpoints are [here](...)
 All the viusal features are [here](...)
 
 ## Reference Code
