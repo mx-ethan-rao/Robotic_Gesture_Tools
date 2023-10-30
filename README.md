@@ -10,7 +10,6 @@
 <p align="center"><img src="./figs/model_fig.png" width=90% height=50%></p>
 
 ## To Do List:
-- :black_square_button: Towards-Unified-Surgical-Skill-Assessment
 - :black_square_button: [Put it on axiv]()
 - :white_check_mark: Submitted to IPCAI
 - :white_check_mark: Inflated-3D
