@@ -2,9 +2,9 @@
 
 
 **Purpose**: Surgical video is an important data stream for gesture recognition. Thus, producing better visual encoders for those data-streams is similarly important.
-**Methods**: Leveraging the Bridge-Prompt framework, we fine-tune a pre-trained vision-text model (CLIP) for gesture recognition in surgical videos. This can utilize extensive outside (non-video) image data, but also make use of label meta-data and weakly supervised contrastive losses.
-**Results:** Our experiments show that prompt-based video encoder outperforms standard encoders in surgical gesture recognition tasks. Notably, it displays strong performance in zero-shot scenarios, where gestures/tasks that were not provided during the encoder training phase are included in the prediction phase. Additionally, we measure the benefit of inclusion text descriptions in the feature extractor training schema.
-**Conclusion:** Bridge-Prompt and similar pre-trained+fine-tuned video encoder models present significant promise for surgical robotics, especially in gesture recognition tasks. Given the diverse range of surgical procedures, the ability of these models to generalize without extensive retraining makes them invaluable.
+<br>**Methods**: Leveraging the Bridge-Prompt framework, we fine-tune a pre-trained vision-text model (CLIP) for gesture recognition in surgical videos. This can utilize extensive outside (non-video) image data, but also make use of label meta-data and weakly supervised contrastive losses.
+<br>**Results:** Our experiments show that prompt-based video encoder outperforms standard encoders in surgical gesture recognition tasks. Notably, it displays strong performance in zero-shot scenarios, where gestures/tasks that were not provided during the encoder training phase are included in the prediction phase. Additionally, we measure the benefit of inclusion text descriptions in the feature extractor training schema.
+<br>**Conclusion:** Bridge-Prompt and similar pre-trained+fine-tuned video encoder models present significant promise for surgical robotics, especially in gesture recognition tasks. Given the diverse range of surgical procedures, the ability of these models to generalize without extensive retraining makes them invaluable.
 
 
 <p align="center"><img src="./figs/model_fig.png" width=90% height=50%></p>
@@ -70,7 +70,7 @@ bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 Please refer to ./Bridge-Prompt/run_batch_cross_valid.sh for batch running
 
 All the experimental checkpoints are [here](...)
-All the viusal features are [here](...)
+<br>All the viusal features are [here](...)
 
 ## Reference Code
 
