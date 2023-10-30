@@ -81,10 +81,10 @@ class JIGSAWS(data_utl.Dataset):
         path_list = os.listdir(vpath)
         path_list.sort(key=lambda x: int(x[4:-4]))
         frame_index = self.frame_sampler(videoname, vlen)
-        # seq = [Image.open(os.path.join(vpath, path_list[i])).convert('RGB') for i in frame_index]
-        seq = self.load_rgb_frames(vpath, frame_index, path_list)
+        seq = [Image.open(os.path.join(vpath, path_list[i])).convert('RGB') for i in frame_index]
+        # seq = self.load_rgb_frames(vpath, frame_index, path_list)
         vid = vlabel[frame_index]
-        vid = np.array([self.one_hot_encode(int(label), 16) for label in vid])
+        # vid = np.array([self.one_hot_encode(int(label)-1, 15) for label in vid])
         # if self.pretrain:
         #     vid = torch.from_numpy(vid)
         #     vid = torch.unique_consecutive(vid)
@@ -99,7 +99,7 @@ class JIGSAWS(data_utl.Dataset):
             seq = torch.stack(seq)
         # seq = torch.stack(seq, 1)
         # seq = seq.permute(1, 0, 2, 3)
-        return torch.from_numpy(seq.transpose([3,0,1,2])), torch.from_numpy(vid).transpose(1,0).to(torch.float32)
+        return seq.permute((1,0,2,3)), torch.from_numpy(vid)
 
     def __len__(self):
         # return 2
@@ -141,8 +141,8 @@ class JIGSAWS_FRAMES(data.Dataset):
                 root='/data/mingxing/JIGSAWS',
                 small_test=False,
                 frame_dir='/data/mingxing/JIGSAWS/frames/',
-                save_feat_dir='/data/mingxing/JIGSAWS/i3d_features',
-                num_frames=32,
+                save_feat_dir='/data/mingxing/JIGSAWS/3Dresnet_features',
+                num_frames=16,
                 transforms=None):
         self.root = root
         self.small_test = small_test
@@ -162,7 +162,8 @@ class JIGSAWS_FRAMES(data.Dataset):
 
     def __getitem__(self, index):
         videoname = self.data_lst[index]
-        seq = self.load_rgb_frames(self.frame_dir, videoname)
+        seq = [Image.open(os.path.join(self.frame_dir, videoname)).convert('RGB')]
+
         if self.transform is not None:
             seq = self.transform(seq)
         else:
@@ -170,20 +171,9 @@ class JIGSAWS_FRAMES(data.Dataset):
             seq = [convert_tensor(img) for img in seq]
             seq = torch.stack(seq)
         fname = os.path.join(self.save_feat_dir, videoname.replace('.jpg', '.npy'))
-        return torch.from_numpy(seq.transpose([3,0,1,2])), fname
+        seq = seq.repeat(self.num_frames, 1, 1, 1)
+        return seq.permute((1,0,2,3)), fname
 
     def __len__(self):
         # return 1
-        return len(self.data_lst)
-
-    def load_rgb_frames(self, frame_dir, videoname):
-        frames = []
-        img = cv2.imread(os.path.join(frame_dir, videoname))[:, :, [2, 1, 0]]
-        w,h,c = img.shape
-        if w < 226 or h < 226:
-            d = 226.-min(w,h)
-            sc = 1+d/min(w,h)
-            img = cv2.resize(img,dsize=(0,0),fx=sc,fy=sc)
-        img = (img/255.)*2 - 1
-        frames.append(img)
-        return np.asarray(frames, dtype=np.float32)                   
+        return len(self.data_lst)                

@@ -1,4 +1,4 @@
-pretrain: "./exp/clip_ucf/ViT-B/16/JIGSAWS/JIGSAWS_6_labels/last_model.pt"
+pretrain: "./exp/clip_ucf/ViT-B/16/JIGSAWS/JIGSAWS_6_labels_index/last_model.pt"
 seed: 1024
 data:
     dataset: JIGSAWS
@@ -10,7 +10,7 @@ data:
     workers: 0
     gpus: 4
     num_classes: 48
-    save_dir: "/data/mingxing/JIGSAWS/6_labels_visual_features"
+    save_dir: "/data/mingxing/JIGSAWS/6_labels_index_visual_features"
     index_bias: 1
     input_size: 224
     randaug:

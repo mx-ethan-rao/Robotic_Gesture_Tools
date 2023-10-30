@@ -138,12 +138,13 @@ def main():
 
     parser.add_argument('--dataset', default="gtea")
     parser.add_argument('--split', default='1')
+    parser.add_argument('--root', default='')
 
     args = parser.parse_args()
 
-    ground_truth_path = "/data/mingxing/MS_TCN_data/"+args.dataset+"/groundTruth/"
+    ground_truth_path = args.root+args.dataset+"/groundTruth/"
     recog_path = "./results/"+args.dataset+"/split_"+args.split+"/"
-    file_list = "/data/mingxing/MS_TCN_data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
+    file_list = args.root+args.dataset+"/splits/test.split"+args.split+".bundle"
 
     list_of_videos = read_file(file_list).split('\n')[:-1]
 

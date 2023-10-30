@@ -10,13 +10,13 @@ from PIL import Image
 
 class JIGSAWS(object):
     def __init__(self,
-                 root='/data/mingxing/Bridge_Prompt_data/JIGSAWS_6_labels',
+                 root='/data/mingxing/JIGSAWS',
                  transform=None, mode='val',
                  num_frames=16, ds=1, ol=0.5,
                  small_test=False,
                  frame_dir='/data/mingxing/JIGSAWS/frames/',
-                 label_dir='/data/mingxing/Bridge_Prompt_data/JIGSAWS_6_labels/action_ids/',
-                 class_dir='/data/mingxing/JIGSAWS/bf_mapping.json',
+                 label_dir='/data/mingxing/JIGSAWS/action_ids/',
+                 class_dir='./Bridge-promt/gesture_mapping/bf_mapping.json',
                  pretrain=True, n_split=1):
         self.root = root
         self.transform = transform

@@ -1,0 +1,15 @@
+0 reaching_for_needle_with_right_hand
+1 positioning_needle
+2 pushing_needle_through_tissue
+3 transferring_needle_from_left_to_right
+4 moving_to_center_with_needle_in_grip
+5 pulling_suture_with_left_hand
+6 pulling_suture_with_right_hand
+7 orienting_needle
+8 using_right_hand_to_help_tighten_suture
+9 loosening_more_suture
+10 dropping_suture_at_end_and_moving_to_end_points
+11 reaching_for_needle_with_left_hand
+12 making_C_loop_around_right_hand
+13 reaching_for_suture_with_right_hand
+14 pulling_suture_with_both_hands

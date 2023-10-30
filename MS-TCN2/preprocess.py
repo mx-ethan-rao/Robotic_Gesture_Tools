@@ -40,7 +40,8 @@ root = args.vpath
 output = args.output
 val_mode = args.val_mode
 subdataset = args.subdataset
-visual_feat_path = osp.join(root, args.visual_feat)
+# visual_feat_path = osp.join(root, args.visual_feat)
+visual_feat_path = args.visual_feat
 # mapping = osp.join(output, 'mapping.txt')
 
 

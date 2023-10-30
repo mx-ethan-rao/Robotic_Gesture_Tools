@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,3,4,6"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
 import torch.nn as nn
 from datasets import Breakfast_FRAMES, GTEA_FRAMES, SALADS_FRAMES, JIGSAWS_FRAMES
 from torch.utils.data import DataLoader
@@ -28,6 +28,8 @@ def main():
     global global_step
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', '-cfg', default='./configs/JIGSAWS/JIGSAWS_exfm.yaml')
+    parser.add_argument('--pretrain', default='')
+    parser.add_argument('--savedir', default='')
     parser.add_argument('--log_time', default='')
     parser.add_argument('--dataset', default='JIGSAWS')
     args = parser.parse_args()
@@ -47,6 +49,10 @@ def main():
     print('-' * 80)
 
     config = DotMap(config)
+    if args.pretrain != '':
+        config.pretrain = args.pretrain
+    if args.savedir != '':
+        config.data.save_dir = args.savedir
 
     device = "cuda" if torch.cuda.is_available() else "cpu"  # If using GPU then use mixed precision training.
 

@@ -4,7 +4,7 @@ import torch
 from model import Trainer
 from batch_gen import BatchGenerator
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,5,7"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 import argparse
 import random
 
@@ -17,6 +17,7 @@ torch.cuda.manual_seed_all(seed)
 torch.backends.cudnn.deterministic = True
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--root', default='/data/mingxing/MS_TCN_data/')
 parser.add_argument('--action', default='train')
 parser.add_argument('--dataset', default="gtea")
 parser.add_argument('--split', default='1')
@@ -53,12 +54,12 @@ sample_rate = 1
 if args.dataset == "50salads":
     sample_rate = 2
 
-vid_list_file = "/data/mingxing/MS_TCN_data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
-vid_list_file_tst = "/data/mingxing/MS_TCN_data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
-features_path = "/data/mingxing/MS_TCN_data/"+args.dataset+"/features/"
-gt_path = "/data/mingxing/MS_TCN_data/"+args.dataset+"/groundTruth/"
+vid_list_file = args.root+args.dataset+"/splits/train.split"+args.split+".bundle"
+vid_list_file_tst = args.root+args.dataset+"/splits/test.split"+args.split+".bundle"
+features_path = args.root+args.dataset+"/features/"
+gt_path = args.root+args.dataset+"/groundTruth/"
 
-mapping_file = "/data/mingxing/MS_TCN_data/"+args.dataset+"/mapping.txt"
+mapping_file = args.root+args.dataset+"/mapping.txt"
 
 model_dir = "./models/"+args.dataset+"/split_"+args.split
 results_dir = "./results/"+args.dataset+"/split_"+args.split

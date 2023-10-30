@@ -57,7 +57,7 @@ def run(max_steps=64e3, mode='rgb', root='/ssd2/charades/Charades_v1_rgb', split
         i3d = InceptionI3d(400, in_channels=2)
     else:
         i3d = InceptionI3d(400, in_channels=3)
-    i3d.replace_logits(16)
+    i3d.replace_logits(15)
     i3d.load_state_dict(torch.load(load_model))
     i3d.cuda()
 

@@ -1,4 +1,4 @@
-name: TCAN
+name: Gesture_Recong
 channels:
   - pytorch
   - nvidia

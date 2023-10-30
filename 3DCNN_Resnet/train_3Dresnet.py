@@ -22,6 +22,9 @@ from torch.autograd import Variable
 import torchvision
 from torchvision import datasets, transforms
 import videotransforms
+from transforms_ss import *
+from resnet import generate_model
+from torch.nn import CrossEntropyLoss
 
 
 import numpy as np
@@ -31,6 +34,40 @@ from pytorch_i3d import InceptionI3d
 # from charades_dataset import Charades as Dataset
 from JIGSAWS_dataset import JIGSAWS
 
+def get_augmentation(training, scale_size=224, dataset='JIGSAWS'):
+    input_mean = [0.48145466, 0.4578275, 0.40821073]
+    input_std = [0.26862954, 0.26130258, 0.27577711]
+    # scale_size = config.data.input_size * 256 // 224
+    if training:
+
+        unique = torchvision.transforms.Compose([GroupMultiScaleCrop(scale_size, [1, .875, .75, .66]),
+                                                 GroupRandomHorizontalFlip(is_sth='some' in dataset),
+                                                 GroupRandomColorJitter(p=0.8, brightness=0.4, contrast=0.4,
+                                                                        saturation=0.2, hue=0.1),
+                                                 GroupRandomGrayscale(p=0.2),
+                                                 GroupGaussianBlur(p=0.0),
+                                                 GroupSolarization(p=0.0)]
+                                                )
+    else:
+        unique = torchvision.transforms.Compose([GroupScale(scale_size),
+                                                 GroupCenterCrop(scale_size)])
+
+    common = torchvision.transforms.Compose([Stack(roll=False),
+                                             ToTorchFormatTensor(div=True),
+                                             GroupNormalize(input_mean,
+                                                            input_std),
+                                            Unstack(roll=False)]
+                                    )
+    return torchvision.transforms.Compose([unique, common])
+
+def most_frequent_using_bincount(tensor):
+    results = []
+    for row in tensor:
+        row_int = row.to(torch.int64)
+        counts = torch.bincount(row_int)
+        most_common = torch.argmax(counts).item()
+        results.append(most_common)
+    return torch.tensor(results, dtype=torch.int64)
 
 def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', train_split='charades/charades.json', batch_size=8*5, save_model=''):
     # setup dataset
@@ -44,7 +81,7 @@ def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', tr
 
     # val_dataset = Dataset(train_split, 'testing', root, mode, test_transforms)
     # val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=36, pin_memory=True)
-    dataset = JIGSAWS(transform=train_transforms, mode='train') 
+    dataset = JIGSAWS(transform=get_augmentation(training=True), mode='train') 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=36, pin_memory=True)
 
 
@@ -53,19 +90,20 @@ def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', tr
 
     
     # setup the model
-    if mode == 'flow':
-        i3d = InceptionI3d(400, in_channels=2)
-        i3d.load_state_dict(torch.load('models/flow_imagenet.pt'))
-    else:
-        i3d = InceptionI3d(400, in_channels=3)
-        i3d.load_state_dict(torch.load('models/rgb_imagenet.pt'))
-    i3d.replace_logits(16)
+    # if mode == 'flow':
+    #     i3d = InceptionI3d(400, in_channels=2)
+    #     i3d.load_state_dict(torch.load('models/flow_imagenet.pt'))
+    # else:
+    #     i3d = InceptionI3d(400, in_channels=3)
+    #     i3d.load_state_dict(torch.load('models/rgb_imagenet.pt'))
+    resnet3d = generate_model(model_depth=50)
+    # i3d.replace_logits(15)
     #i3d.load_state_dict(torch.load('/ssd/models/000920.pt'))
-    i3d.cuda()
-    i3d = nn.DataParallel(i3d)
+    resnet3d.cuda()
+    resnet3d = nn.DataParallel(resnet3d)
 
     lr = init_lr
-    optimizer = optim.SGD(i3d.parameters(), lr=lr, momentum=0.9, weight_decay=0.0000001)
+    optimizer = optim.SGD(resnet3d.parameters(), lr=lr, momentum=0.9, weight_decay=0.0000001)
     lr_sched = optim.lr_scheduler.MultiStepLR(optimizer, [300, 1000])
 
 
@@ -80,9 +118,9 @@ def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', tr
         # for phase in ['train', 'val']:
         for phase in ['train']:
             if phase == 'train':
-                i3d.train(True)
+                resnet3d.train(True)
             else:
-                i3d.train(False)  # Set model to evaluate mode
+                resnet3d.train(False)  # Set model to evaluate mode
                 
             tot_loss = 0.0
             tot_loc_loss = 0.0
@@ -99,22 +137,15 @@ def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', tr
                 # wrap them in Variable
                 inputs = Variable(inputs.cuda())
                 t = inputs.size(2)
-                labels = Variable(labels.cuda())
+                labels = Variable(most_frequent_using_bincount(labels).cuda())
 
-                per_frame_logits = i3d(inputs)
-                # upsample to input size
-                per_frame_logits = F.interpolate(per_frame_logits, t, mode='linear')
+                outputs, _ = resnet3d(inputs)
+                criterion = CrossEntropyLoss()
+                loss = criterion(outputs, labels)
+                # tot_cls_loss += cls_loss.item()
 
-                # compute localization loss
-                loc_loss = F.binary_cross_entropy_with_logits(per_frame_logits, labels)
-                tot_loc_loss += loc_loss.item()
-
-                # compute classification loss (with max-pooling along time B x C x T)
-                cls_loss = F.binary_cross_entropy_with_logits(torch.max(per_frame_logits, dim=2)[0], torch.max(labels, dim=2)[0])
-                tot_cls_loss += cls_loss.item()
-
-                loss = (0.5*loc_loss + 0.5*cls_loss)/num_steps_per_update
-                tot_loss += loss.item()
+                avg_loss = loss/num_steps_per_update
+                tot_loss += avg_loss.item()
                 loss.backward()
 
                 if num_iter == num_steps_per_update and phase == 'train':
@@ -126,7 +157,7 @@ def run(init_lr=0.1, max_steps=2500, mode='rgb', root='/ssd/Charades_v1_rgb', tr
                     if steps % 50 == 0:
                         print('{} Loc Loss: {:.4f} Cls Loss: {:.4f} Tot Loss: {:.4f}'.format(phase, tot_loc_loss/(10*num_steps_per_update), tot_cls_loss/(10*num_steps_per_update), tot_loss/10))
                         # save model
-                        torch.save(i3d.module.state_dict(), os.path.join(save_model, str(steps).zfill(6)+'.pt'))
+                        torch.save(resnet3d.module.state_dict(), os.path.join(save_model, str(steps).zfill(6)+'.pt'))
                         tot_loss = tot_loc_loss = tot_cls_loss = 0.
             if phase == 'val':
                 print('{} Loc Loss: {:.4f} Cls Loss: {:.4f} Tot Loss: {:.4f}'.format(phase, tot_loc_loss/num_iter, tot_cls_loss/num_iter, (tot_loss*num_steps_per_update)/num_iter))
