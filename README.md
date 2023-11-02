@@ -31,7 +31,7 @@ conda env create -f environment.yml
 ```
 
 ## Running example for Bridge-Prompt on JIGSAWS
-### Preprocessing the training data for a validation set
+### Preprocessing for frames of a validation set
 ```bash
 title=All_gestures
 valid="B"
@@ -43,22 +43,22 @@ python ./Bridge-Prompt/preprocess/preprocess.py --vpath JIGSAWS_path --out /path
 python ./Bridge-Prompt/preprocess/preprocess.py --vpath JIGSAWS_path --out /path/to/$title/$task-$valid --user_for_val $valid --task $task --filter_labels True --keep_labels 10
 ```
 
-### Training with Bridge-Prompt
+### Train with Bridge-Prompt
 ```bash
 bash scripts/run_train.sh ./configs/JIGSAWS/JIGSAWS_ft.yaml $task $valid /path/to/$title/$task-$valid 
 ```
 
-### Visual feature extraction
+### Visual feature extraction for all frames
 ```bash
 python extract_frame_features.py --config ./configs/JIGSAWS/JIGSAWS_exfm.yaml --pretrain ./exp/clip_ucf/ViT-B/16/JIGSAWS/$task-$valid/last_model.pt --savedir /path/to/$title/$task-$valid/visual_features
 ```
-### Training using Gesture Index (indtead of text description)
+### Train using Gesture Index (indtead of text description)
 ```
 Change class_dir in JIGSAWS class in ./Bridge-Prompt/datasets/datasets.py from bf_mapping.json to bf_index_mapping.json
 ```
 
-## Run Example for MS-TCN++ on JIGSAWS
-### Preprocessing the training data for a validation set
+## Running example for MS-TCN++ on JIGSAWS
+### Preprocessing
 ```bash
 mkdir -p /path/to/$title/$task-$valid/JIGSAWS
 python ./MS_TCN2/preprocess.py --subdataset $task \
@@ -67,7 +67,10 @@ python ./MS_TCN2/preprocess.py --subdataset $task \
                                 --visual_feat /path/to/$title/$task-$valid/visual_features
 
 cp ./mapping.txt /path/to/$title/$task-$valid/JIGSAWS/mapping.txt
+```
 
+### Train & test 
+```bash
 bash train.sh JIGSAWS .$task.LOUO.$valid /path/to/$title/$task-$valid/
 
 bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
@@ -75,7 +78,7 @@ bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 ## Remarks
 #### Please refer to [run_batch_cross_valid.sh](Bridge-Prompt/run_batch_cross_valid.sh) for batch running
 
-#### Please email Mingxing (mingxing.rao@vanderbilt.edu) for all experimental checkpoints and visual features
+#### Please email Mingxing ([mingxing.rao@vanderbilt.edu](mailto:mingxing.rao@vanderbilt.edu)) for all experimental checkpoints and visual features
 
 ## Reference Code
 
