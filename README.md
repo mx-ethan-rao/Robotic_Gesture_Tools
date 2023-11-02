@@ -11,7 +11,6 @@
 
 ## To Do List:
 - :black_square_button: [Put it on axiv]()
-- :white_check_mark: Submitted to IPCAI
 - :white_check_mark: 3DResNet
 - :white_check_mark: Inflated-3D
 - :white_check_mark: MS-TCN2
