@@ -12,6 +12,7 @@
 ## To Do List:
 - :black_square_button: [Put it on axiv]()
 - :white_check_mark: Submitted to IPCAI
+- :white_check_mark: 3DResNet
 - :white_check_mark: Inflated-3D
 - :white_check_mark: MS-TCN2
 - :white_check_mark: Bridge-Prompt
@@ -29,7 +30,8 @@ Download JIGSAWS dataset from [here](https://cirl.lcsr.jhu.edu/research/hmm/data
 conda env create -f environment.yml
 ```
 
-## Run Example for Bridge-Prompt on JIGSAWS
+## Running example for Bridge-Prompt on JIGSAWS
+### Preprocessing the training data for a validation set
 ```bash
 title=All_gestures
 valid="B"
@@ -41,9 +43,13 @@ python ./Bridge-Prompt/preprocess/preprocess.py --vpath JIGSAWS_path --out /path
 python ./Bridge-Prompt/preprocess/preprocess.py --vpath JIGSAWS_path --out /path/to/$title/$task-$valid --user_for_val $valid --task $task --filter_labels True --keep_labels 10
 ```
 
+### Training with Bridge-Prompt
 ```bash
 bash scripts/run_train.sh ./configs/JIGSAWS/JIGSAWS_ft.yaml $task $valid /path/to/$title/$task-$valid 
+```
 
+### Visual feature extraction
+```bash
 python extract_frame_features.py --config ./configs/JIGSAWS/JIGSAWS_exfm.yaml --pretrain ./exp/clip_ucf/ViT-B/16/JIGSAWS/$task-$valid/last_model.pt --savedir /path/to/$title/$task-$valid/visual_features
 ```
 ### Training using Gesture Index (indtead of text description)
@@ -52,6 +58,7 @@ Change class_dir in JIGSAWS class in ./Bridge-Prompt/datasets/datasets.py from b
 ```
 
 ## Run Example for MS-TCN++ on JIGSAWS
+### Preprocessing the training data for a validation set
 ```bash
 mkdir -p /path/to/$title/$task-$valid/JIGSAWS
 python ./MS_TCN2/preprocess.py --subdataset $task \
@@ -65,11 +72,10 @@ bash train.sh JIGSAWS .$task.LOUO.$valid /path/to/$title/$task-$valid/
 
 bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 ```
+## Remarks
+#### Please refer to [run_batch_cross_valid.sh](Bridge-Prompt/run_batch_cross_valid.sh) for batch running
 
-#### Please refer to ./Bridge-Prompt/run_batch_cross_valid.sh for batch running
-
-#### All the experimental checkpoints are [here](...)
-#### All the viusal features are [here](...)
+#### Please email Mingxing (mingxing.rao@vanderbilt.edu) for all experimental checkpoints and visual features
 
 ## Reference Code
 
