@@ -1,4 +1,4 @@
-#  Zero-shot Prompt-based Video Encoder foor Surgical Gesture Recognition
+#  Zero-shot Prompt-based Video Encoder for Surgical Gesture Recognition
 
 
 **Purpose**: Surgical video is an important data stream for gesture recognition. Thus, producing better visual encoders for those data-streams is similarly important.
