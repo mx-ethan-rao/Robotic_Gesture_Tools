@@ -70,9 +70,9 @@ cp ./mapping.txt /path/to/$title/$task-$valid/JIGSAWS/mapping.txt
 
 ### Train & test 
 ```bash
-bash train.sh JIGSAWS .$task.LOUO.$valid /path/to/$title/$task-$valid/
+bash ./MS-TCN2/train.sh JIGSAWS .$task.LOUO.$valid /path/to/$title/$task-$valid/
 
-bash test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
+bash ./MS-TCN2/test_epoch.sh JIGSAWS .$task.LOUO.$valid 100 /path/to/$title/$task-$valid/
 ```
 ## Remarks
 #### Please refer to [run_batch_cross_valid.sh](Bridge-Prompt/run_batch_cross_valid.sh) for batch running
